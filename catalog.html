@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Product Table with Borrow and Cart</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 20px;
+        padding: 0;
+    }
+    h1, h2 {
+        color: #333;
+        text-align: center;
+    }
+    table {
+        width: 80%;
+        margin: 20px auto;
+        border-collapse: collapse;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        transition: box-shadow 0.3s ease;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    .highlight {
+        background-color: #ffe4b5;
+    }
+
+    /* Popup styles */
+    .popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+        z-index: 999;
+        opacity: 0; /* Hidden initially */
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .popup.show {
+        display: block;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .popup.hide {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+
+    .popup-content {
+        overflow-y: auto;
+        max-height: 300px; /* Example height, adjust as needed */
+    }
+
+    .popup h2 {
+        margin-top: 0;
+        color: #333;
+    }
+
+    .popup p {
+        margin-bottom: 10px;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: #999;
+    }
+
+    
+.cart {
+    background-color: #ffffff; /* พื้นหลังของตะกร้า */
+    padding: 20px; /* ระยะห่างภายใน */
+    border-radius: 10px; /* เส้นมน */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* เงาให้กับตะกร้า */
+    max-width: 400px; /* ความกว้างสูงสุด */
+    margin: 20px auto; /* จัดกลาง */
+}
+
+/* Cart Header Styles */
+.cart h2 {
+    text-align: center; /* จัดข้อความให้กลาง */
+    color: #333; /* สีข้อความ */
+    font-size: 1.5em; /* ขนาดตัวอักษร */
+    margin-bottom: 20px; /* ระยะห่างด้านล่าง */
+}
+
+/* Cart Item Styles */
+.cart-item {
+    border-bottom: 1px solid #ddd; /* เส้นขอบด้านล่างของแต่ละรายการ */
+    padding: 10px 0; /* ระยะห่างด้านบนและล่าง */
+}
+
+.cart-item p {
+    margin: 5px 0; /* ระยะห่างของพารากราฟ */
+}
+
+/* Return Product Button Styles */
+.cart-item button {
+    background-color: #dc3545; /* สีปุ่มคืนสินค้า */
+    color: white; /* สีข้อความปุ่ม */
+    border: none; /* ไม่มีเส้นขอบ */
+    padding: 5px 10px; /* ระยะห่างภายใน */
+    border-radius: 5px; /* เส้นมน */
+    cursor: pointer; /* เปลี่ยนเคอร์เซอร์เมื่อ hover */
+    transition: background-color 0.3s ease; /* เอฟเฟกต์การเปลี่ยนสีเมื่อ hover */
+}
+
+.cart-item button:hover {
+    background-color: #c82333; /* สีที่เข้มขึ้นเมื่อ hover */
+}
+
+/* Checkout Button Styles */
+.checkout-button {
+    text-align: center; /* จัดกลาง */
+    margin-top: 30px; /* ระยะห่างด้านบน */
+}
+
+.btn-checkout {
+    padding: 15px 30px; /* ระยะห่างภายใน */
+    background-color: #28a745; /* สีพื้นหลัง */
+    color: white; /* สีข้อความ */
+    text-decoration: none; /* ลบเส้นใต้ */
+    border-radius: 50px; /* เส้นมน */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* เงาให้กับปุ่ม */
+    font-size: 1.2em; /* ขนาดตัวอักษร */
+    position: relative; /* สำหรับเอฟเฟกต์ */
+    display: inline-block; /* ให้ปุ่มอยู่ในบรรทัดเดียวกัน */
+    transition: transform 0.3s ease; /* เพิ่มการเปลี่ยนแปลงเมื่อ hover */
+}
+
+.btn-checkout:hover {
+    background-color: #218838; /* เปลี่ยนสีเมื่อ hover */
+    transform: translateY(-3px); /* ยกปุ่มขึ้นเมื่อ hover */
+}
+
+.btn-checkout:active {
+    transform: translateY(1px); /* ทำให้ปุ่มเคลื่อนที่ลงเมื่อคลิก */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* เปลี่ยนเงาเมื่อคลิก */
+}
+
+/* Check Out Button */
+.checkout-button {
+    text-align: center;
+    margin-top: 30px; /* เพิ่มระยะห่างด้านบน */
+    transition: transform 0.3s ease; /* เพิ่มการเปลี่ยนแปลงเมื่อ hover */
+}
+
+.btn-checkout {
+    padding: 15px 30px; /* เพิ่ม padding ให้ปุ่ม */
+    background-color: #28a745; /* สีพื้นหลัง */
+    color: white; /* สีข้อความ */
+    text-decoration: none; /* ลบเส้นใต้ */
+    border-radius: 50px; /* ทำให้ปุ่มกลมมน */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* เพิ่มเงาให้กับปุ่ม */
+    font-size: 1.2em; /* ขนาดตัวอักษร */
+    position: relative; /* เพื่อใช้สำหรับการสร้างเอฟเฟกต์ */
+}
+
+.btn-checkout:hover {
+    background-color: #218838; /* เปลี่ยนสีเมื่อ hover */
+    transform: translateY(-3px); /* ยกปุ่มขึ้นเมื่อ hover */
+}
+
+.btn-checkout:active {
+    transform: translateY(1px); /* ทำให้ปุ่มเคลื่อนที่ลงเมื่อคลิก */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* เปลี่ยนเงาเมื่อคลิก */
+}
+
+/* เพิ่มเอฟเฟกต์ระยะห่างรอบปุ่ม */
+.btn-checkout::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50px; /* ทำให้เส้นมน */
+    background: rgba(255, 255, 255, 0.2); /* เอฟเฟกต์ความโปร่งใส */
+    transition: opacity 0.3s ease; /* เพิ่มการเปลี่ยนแปลง */
+    opacity: 0; /* ซ่อนโดยเริ่มต้น */
+}
+
+.btn-checkout:hover::after {
+    opacity: 1; /* แสดงเอฟเฟกต์เมื่อ hover */
+}
+
+</style>
+</head>
+<body>
+    <h1>ตารางสินค้า</h1>
+
+    <table>
+        <tr>
+            <th>ชื่อสินค้า</th>
+            <th>รายละเอียด</th>
+            <th>ราคา</th>
+            <th>การจัดการ</th>
+        </tr>
+        <tr class="product-row">
+            <td>โทษัพทย์หินมงคล</td>
+            <td>หินแกร่ง ไม่แตกร้าว</td>
+            <td>฿500</td>
+            <td><button onclick="borrowProduct(this)">ยืมสินค้า</button></td>
+        </tr>
+        <tr class="product-row">
+            <td>โทษัพทย์ตะปูไฟ</td>
+            <td>ช่างตะเพียบ ไฟแรง</td>
+            <td>฿700</td>
+            <td><button onclick="borrowProduct(this)">ยืมสินค้า</button></td>
+        </tr>
+        <tr class="product-row highlight">
+            <td>โทษัพทย์จีนมนุษย์</td>
+            <td>มนุษย์มีชีวิต พลังงานแฟลช</td>
+            <td>฿1200</td>
+            <td><button onclick="borrowProduct(this)">ยืมสินค้า</button></td>
+        </tr>
+    </table>
+
+    <!-- Popup -->
+    <div id="popup" class="popup">
+        <span class="close-btn" onclick="closePopup()">&times;</span>
+        <div class="popup-content">
+            <h2 id="popup-title"></h2>
+            <p id="popup-description"></p>
+            <p id="popup-price"></p>
+        </div>
+    </div>
+
+    <!-- Cart -->
+    <div id="cart" class="cart">
+        <h2>ตะกร้าสินค้า</h2>
+        <div id="cart-items"></div>
+        <button onclick="viewCart()">ดูตะกร้าสินค้า</button>
+    </div>
+    <div class="checkout-button">
+        <a href="product_list.html" class="btn-checkout">Proceed to Check Out</a>
+    </div>
+</div>
+    <script>
+        function proceedToCheckout() {
+    // สร้างอาเรย์สำหรับจัดเก็บข้อมูลสินค้าที่อยู่ในตะกร้า
+    const cartItems = [];
+    const cartItemElements = document.querySelectorAll('.cart-item');
+
+    // วนลูปผ่านแต่ละไอเทมในตะกร้า
+    cartItemElements.forEach(item => {
+        const productName = item.querySelector('strong').textContent;
+        const productDescription = item.querySelector('p').textContent;
+        const productPrice = item.querySelectorAll('p')[1].textContent;
+
+        // เพิ่มข้อมูลสินค้าลงในอาเรย์
+        cartItems.push({
+            name: productName,
+            description: productDescription,
+            price: productPrice
+        });
+    });
+
+    // แปลงข้อมูลเป็น JSON และเก็บใน localStorage
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+
+    // เปลี่ยนเส้นทางไปยังหน้า checkout.html
+    window.location.href = 'checkout.html';
+}
+
+        // Function to borrow product
+        function borrowProduct(button) {
+            // Get the product row
+            const row = button.closest('.product-row');
+
+            // Get product details
+            const productName = row.cells[0].textContent;
+            const productDescription = row.cells[1].textContent;
+            const productPrice = row.cells[2].textContent;
+
+            // Add product to cart
+            const cartItems = document.getElementById('cart-items');
+            const cartItem = document.createElement('div');
+            cartItem.classList.add('cart-item');
+            cartItem.innerHTML = `
+                <p><strong>${productName}</strong></p>
+                <p>${productDescription}</p>
+                <p>ราคา: ${productPrice}</p>
+                <button onclick="returnProduct(this)">คืนสินค้า</button>
+            `;
+            cartItems.appendChild(cartItem);
+
+            // Show success message (optional)
+            alert(`เพิ่ม ${productName} เข้าตะกร้าสินค้าแล้ว`);
+
+            // Optionally close popup after adding to cart
+            closePopup();
+        }
+
+        // Function to return product from cart
+        function returnProduct(button) {
+            const cartItem = button.closest('.cart-item');
+            cartItem.remove();
+
+            // Show success message (optional)
+            alert(`คืนสินค้า ${cartItem.querySelector('strong').textContent} เรียบร้อยแล้ว`);
+        }
+
+        // Function to close the popup
+        function closePopup() {
+            const popup = document.getElementById('popup');
+            popup.classList.remove('show');
+            popup.classList.add('hide');
+
+            // Delay hiding the popup to match animation duration
+            setTimeout(() => {
+                popup.classList.remove('hide');
+            }, 300); // 300 milliseconds (0.3s) matches the CSS transition duration
+        }
+
+        // Function to view cart
+        function viewCart() {
+            const cart = document.getElementById('cart');
+            cart.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+
+</body>
+</html>
